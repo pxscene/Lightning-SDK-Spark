@@ -2,5 +2,8 @@
   "name": "lightning-sdk-spark",
   "dependencies": {
     "lightning-sdk": "github:WebPlatformForEmbedded/Lightning-SDK"
-  }
+  },
+  "description": "",
+  "version": "1.0.0",
+  "main": "index.js"
 }
