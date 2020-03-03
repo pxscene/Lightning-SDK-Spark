@@ -467,6 +467,21 @@ class SparkPlatform {
     }
   }
 
+  getFontSetting(textTextureRenderer) {
+    let fontResource = textTextureRenderer._context.font;
+    let fontFace = textTextureRenderer._settings.fontFace;
+    let fontStyle = textTextureRenderer._settings.fontStyle.toLowerCase();
+
+    if (this._fontResources !== undefined && this._fontResources.has(fontFace)) {
+      fontResource = this._fontResources.get(fontFace);
+      if (fontResource.needsStyleCoercion(fontStyle)) {
+        let url = fontResource.url;
+        fontResource = sparkscene.create({t: "fontResource", url: url, fontStyle: fontStyle});
+      }
+    }
+    return fontResource;
+  }
+
   addServiceProvider(provider) {
     if (typeof provider == "function") {
       sparkscene.addServiceProvider(provider);
