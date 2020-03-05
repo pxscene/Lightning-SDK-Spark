@@ -1,5 +1,7 @@
 import { Lightning } from 'lightning-sdk'
 
+import ApplicationTexture from '../extensions/ApplicationTexture'
+
 class SparkPlatform {
 
   init(stage) {
@@ -489,6 +491,12 @@ class SparkPlatform {
     else {
       console.error("service provider need to be a function !!!");
     }
+  }
+
+  // extensions API
+
+  static createApplicationTexture() {
+    return ApplicationTexture
   }
 }
 
