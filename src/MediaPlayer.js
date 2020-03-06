@@ -1,9 +1,9 @@
-import { MediaPlayer as WPEMediaPlayer } from 'lightning-sdk'
+import { MediaPlayer as WPEMediaPlayer, Log, Metrics, Lightning } from 'lightning-sdk'
 
 export default class MediaPlayer extends WPEMediaPlayer {
   _construct(){
-    this._skipRenderToTexture = false;
-    this._playSent = false;
+    super._construct()
+    this._playSent = false
   }
 
   static _supportedEvents() {
@@ -37,73 +37,61 @@ export default class MediaPlayer extends WPEMediaPlayer {
 
   _registerListeners() {
     MediaPlayer._supportedEvents().forEach(event => {
-      const handler = (e) => {
-        this.fire(event, {videoElement: this.videoEl, event: e});
-      };
-      this.eventHandlers.push(handler);
-      this.videoEl.on(event, handler);
-    });
+      const handler = e => {
+        if (this._metrics[event] && typeof this._metrics[event] === 'function') {
+          this._metrics[event]({ currentTime: this.videoEl.currentTime })
+        }
+        this.fire(event, { videoElement: this.videoEl, event: e })
+      }
+      this.eventHandlers.push(handler)
+      this.videoEl.on(event, handler)
+    })
   }
 
   _deregisterListeners() {
+    Log.info('Deregistering event listeners MediaPlayer')
     MediaPlayer._supportedEvents().forEach((event, index) => {
-      this.videoEl.delListener(event, this.eventHandlers[index]);
-    });
-    this.eventHandlers = [];
+      this.videoEl.delListener(event, this.eventHandlers[index])
+    })
+    this.eventHandlers = []
   }
 
   updateSettings(settings = {}) {
-    // The Component that 'consumes' the media player.
-    this._consumer = settings.consumer;
-
-    if (this._consumer && this._consumer.getMediaplayerSettings) {
-      // Allow consumer to add settings.
-      settings = Object.assign(settings, this._consumer.getMediaplayerSettings());
-    }
-
-    if (!lng.Utils.equalValues(this._stream, settings.stream)) {
-      if (settings.stream && settings.stream.keySystem) {
-        navigator.requestMediaKeySystemAccess(settings.stream.keySystem.id, settings.stream.keySystem.config).then((keySystemAccess) => {
-          return keySystemAccess.createMediaKeys();
-        }).then((createdMediaKeys) => {
-          return this.videoEl.setMediaKeys(createdMediaKeys);
-        }).then(() => {
-          if (settings.stream && settings.stream.src)
-            this.open(settings.stream.src);
-        }).catch(() => {
-          console.error('Failed to set up MediaKeys');
-        });
-      } else if (settings.stream && settings.stream.src) {
-        this.open(settings.stream.src);
-        this._setHide(settings.hide);
-        this._setVideoArea(settings.videoPos);
-        this.doPlay();
-      } else {
-        this.close();
-      }
-      this._stream = settings.stream;
-    }
+    return super.updateSettings(settings)
   }
 
   _setHide(hide) {
     this.videoEl.a = hide ? 0 : 1;
   }
 
-  open(url) {
-    this._playSent = false;
-    console.log('Playing stream', url);
+  open(url, settings = { hide: false, videoPosition: null }) {
+    this._playSent = false
+
+    this._metrics = Metrics.media(url)
+    Log.info('Playing stream', url)
     if (this.application.noVideo) {
-      console.log('noVideo option set, so ignoring: ' + url);
-      return;
+      Log.info('noVideo option set, so ignoring: ' + url)
+      return
     }
-    if (this.videoEl.url === url) return this.reload();
-    this.videoEl.url = url;
+    if (this.videoEl.url === url) return this.reload()
+    this.videoEl.url = url
+
+    this._setHide(settings.hide)
+    this._setVideoArea(settings.videoPosition || [0, 0, 1920, 1080])
   }
 
   close() {
     this._playSent = false;
     this.videoEl.stop();
     this._clearSrc();
+  }
+
+  doPlay() {
+    return super.doPlay()
+  }
+
+  doPause() {
+    return super.doPause()
   }
 
   reload() {
@@ -121,6 +109,10 @@ export default class MediaPlayer extends WPEMediaPlayer {
     this.videoEl.position = pos;
   }
 
+  getDuration() {
+    return super.getDuration()
+  }
+
   seek(time, absolute = false) {
     if(absolute) {
       this.videoEl.position = time;
@@ -131,8 +123,8 @@ export default class MediaPlayer extends WPEMediaPlayer {
   }
 
   _setVideoArea(videoPos) {
-    if (lng.Utils.equalValues(this._videoPos, videoPos)) {
-      return;
+    if (Lightning.Utils.equalValues(this._videoPos, videoPos)) {
+      return
     }
 
     this._videoPos = videoPos;
@@ -160,14 +152,14 @@ export default class MediaPlayer extends WPEMediaPlayer {
     return super.error(args)
   }
 
-  seeked(args) {
+  seeked() {
     this._fireConsumer('$mediaplayerSeeked', {
       currentTime: this.videoEl.position,
       duration: this.videoEl.duration || 1
     });
   }
 
-  seeking(args) {
+  seeking() {
     this._fireConsumer('$mediaplayerSeeking', {
       currentTime: this.videoEl.position,
       duration: this.videoEl.duration || 1
