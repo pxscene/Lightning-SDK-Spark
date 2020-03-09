@@ -23,7 +23,6 @@ export default class MediaPlayer extends WPEMediaPlayer {
     this.videoEl = sparkscene.create({
       t: "video",
       id: "video-player",
-      autoPlay: "false",
       proxy:proxyServer
     });
 
@@ -78,6 +77,9 @@ export default class MediaPlayer extends WPEMediaPlayer {
 
     this._setHide(settings.hide)
     this._setVideoArea(settings.videoPosition || [0, 0, 1920, 1080])
+
+    // if autoPlay, play is only called on init when url isn't yet set
+    this.videoEl.play()
   }
 
   close() {
@@ -87,7 +89,7 @@ export default class MediaPlayer extends WPEMediaPlayer {
   }
 
   doPlay() {
-    return super.doPlay()
+    this.videoEl.speed = 1
   }
 
   doPause() {
@@ -99,6 +101,9 @@ export default class MediaPlayer extends WPEMediaPlayer {
     var url = this.videoEl.url;
     this.close();
     this.videoEl.url = url;
+
+    // if autoPlay, play is only called on init when url isn't yet set
+    this.videoEl.play()
   }
 
   getPosition() {
