@@ -1,13 +1,25 @@
 import { MediaPlayer as WPEMediaPlayer, Log, Metrics, Lightning } from 'lightning-sdk'
 
-export default class MediaPlayer extends WPEMediaPlayer {
-  _construct(){
-    super._construct()
-    this._playSent = false
-  }
+const PlayerState = {
+  IDLE: 0,
+  INITIALIZING: 1,
+  INITIALIZED: 2,
+  PREPARING: 3,
+  PREPARED: 4,
+  BUFFERING: 5,
+  PAUSED: 6,
+  SEEKING: 7,
+  PLAYING: 8,
+  STOPPING: 9,
+  STOPPED: 10,
+  COMPLETE: 11,
+  ERROR: 12,
+  RELEASED: 13
+};
 
+export default class MediaPlayer extends WPEMediaPlayer {
   static _supportedEvents() {
-    return ['onProgressUpdate', 'onEndOfStream'];
+    return ['onProgressUpdate', 'onEndOfStream', 'onPlayerStateChanged'];
   }
 
   set textureMode(v) {
@@ -64,8 +76,6 @@ export default class MediaPlayer extends WPEMediaPlayer {
   }
 
   open(url, settings = { hide: false, videoPosition: null }) {
-    this._playSent = false
-
     this._metrics = Metrics.media(url)
     Log.info('Playing stream', url)
     if (this.application.noVideo) {
@@ -78,12 +88,10 @@ export default class MediaPlayer extends WPEMediaPlayer {
     this._setHide(settings.hide)
     this._setVideoArea(settings.videoPosition || [0, 0, 1920, 1080])
 
-    // if autoPlay, play is only called on init when url isn't yet set
-    this.videoEl.play()
+    this.canplay()
   }
 
   close() {
-    this._playSent = false;
     this.videoEl.stop();
     this._clearSrc();
   }
@@ -97,13 +105,10 @@ export default class MediaPlayer extends WPEMediaPlayer {
   }
 
   reload() {
-    this._playSent = false;
     var url = this.videoEl.url;
     this.close();
     this.videoEl.url = url;
-
-    // if autoPlay, play is only called on init when url isn't yet set
-    this.videoEl.play()
+    this.canplay();
   }
 
   getPosition() {
@@ -152,11 +157,6 @@ export default class MediaPlayer extends WPEMediaPlayer {
     }
   }
 
-  error(args) {
-    this._playSent = false;
-    return super.error(args)
-  }
-
   seeked() {
     this._fireConsumer('$mediaplayerSeeked', {
       currentTime: this.videoEl.position,
@@ -172,9 +172,7 @@ export default class MediaPlayer extends WPEMediaPlayer {
   }
 
   onEndOfStream(args) {
-    this._fireConsumer('$mediaplayerEnded', args);
-    this._setState("");
-    this._playSent = false;
+    this.ended(args);
   }
 
   onProgressUpdate(args) {
@@ -182,9 +180,49 @@ export default class MediaPlayer extends WPEMediaPlayer {
       currentTime: this.videoEl.position,
       duration: this.videoEl.duration || 1
     });
-    if (this._playSent == false) {
-      this._fireConsumer('$mediaplayerPlaying', args);
-      this._playSent = true;
+  }
+
+  onPlayerStateChanged(args) {
+    let prevState = this.playerState;
+    this.playerState = args.event.state;
+
+    switch (this.playerState) {
+      case PlayerState.IDLE: break;
+      case PlayerState.INITIALIZING:
+        this.loadstart();
+        break;
+      case PlayerState.INITIALIZED: break;
+      case PlayerState.PREPARING: break;
+      case PlayerState.PREPARED:
+        this.loadeddata();
+        break;
+      case PlayerState.BUFFERING: break;
+      case PlayerState.PAUSED:
+        this.pause();
+        break;
+      case PlayerState.SEEKING:
+        this.seeking();
+        break;
+      case PlayerState.PLAYING:
+        if (prevState === PlayerState.PAUSED)
+          this.play();
+        else {
+          if (prevState === PlayerState.SEEKING)
+            this.seeked();
+          this.playing();
+        }
+        break;
+      case PlayerState.STOPPING: break;
+      case PlayerState.STOPPED:
+        this._clearSrc();
+        break;
+      case PlayerState.COMPLETE:
+        this.ended();
+        break;
+      case PlayerState.ERROR:
+        this.error();
+        break;
+      case PlayerState.RELEASED: break;
     }
   }
 }
