@@ -5,10 +5,15 @@ import ApplicationTexture from '../extensions/ApplicationTexture'
 class SparkPlatform {
 
   init(stage) {
+    let _this = this;
     this.stage = stage;
     this._looping = false;
     this._awaitingLoop = false;
     this._sparkCanvas = null;
+    this._appRoot = sparkscene.root;
+    sparkscene.on('onClose' , function() {
+      _this._appRoot = null;
+    });
   }
 
   destroy() {
@@ -224,13 +229,13 @@ class SparkPlatform {
   }
 
   registerKeydownHandler(keyhandler) {
-    sparkview.on('onKeyDown', function(e) {
+    sparkscene.root.on('onKeyDown', function(e) {
       keyhandler(e);
     });
   }
 
   registerKeyupHandler(keyhandler) {
-    sparkview.on('onKeyUp', function(e) {
+    sparkscene.root.on('onKeyUp', function(e) {
       keyhandler(e);
     });
   }

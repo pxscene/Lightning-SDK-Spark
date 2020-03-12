@@ -10,6 +10,17 @@ export default class ApplicationTexture extends Lightning.Texture {
       _this._readyResolve = resolve;
       _this._readyReject = reject;
     });
+
+    sparkscene.on("onClose", function() {
+      if (_this._app) {
+        _this._app.destroy();
+        _this._app = null;
+      }
+      if (_this._optimus) {
+        _this._optimus.setScene(null);
+        _this._optimus = null;
+      }
+    });
   }
 
   get id() {
