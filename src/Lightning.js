@@ -172,6 +172,24 @@ class SparkPlatform {
       options = Object.assign(options, windowOptions);
     }
     let gl = sparkgles2.init(options);
+    gl.canvas = {
+      width: w,
+      height: h,
+      style: {
+        set display(value) {
+          if (value === 'none') {
+            global.beginDrawing();
+            gl.scissor(0, 0, w, h);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.scissor(0, 0, 0, 0);
+            global.endDrawing();
+          }
+        }
+      },
+      remove: () => {
+        gl.canvas.style.display = 'none';
+      }
+    };
     return gl;
   }
 
