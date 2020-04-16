@@ -17,7 +17,10 @@ export default class ApplicationTexture extends Lightning.Texture {
         _this._app = null;
       }
       if (_this._optimus) {
-        _this._optimus.setScene(null);
+        if (sparkscene.capabilities.sparkgl && (sparkscene.capabilities.sparkgl.optimus >=2))
+        {
+          _this._optimus.setScene(null);
+        }
         _this._optimus = null;
       }
     });
