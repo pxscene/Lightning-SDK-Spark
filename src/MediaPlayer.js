@@ -37,6 +37,7 @@ export default class MediaPlayer extends WPEMediaPlayer {
       id: "video-player",
       proxy:proxyServer
     });
+    this.videoEl.style = {}
 
     var _this = this;
     sparkscene.on('onClose' , function(e) {
