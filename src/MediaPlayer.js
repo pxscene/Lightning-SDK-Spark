@@ -83,9 +83,17 @@ export default class MediaPlayer extends WPEMediaPlayer {
       Log.info('noVideo option set, so ignoring: ' + url)
       return
     }
-    if (this.videoEl.url === url) return this.reload()
-    this.videoEl.url = url
-
+    var videoUrl = url;                                                                                                     
+    var optionIndex = url.indexOf("?");                                                   
+    // encode any url params                                                                                                
+    if (optionIndex != -1) {                                                              
+      var options = url.substring(optionIndex+1);                                  
+      videoUrl = url.substring(0, optionIndex) + '?' + encodeURIComponent(options);
+    }                                                                             
+    if (this.videoEl.url === videoUrl) return this.reload();                       
+                                                                                                                          
+    this.videoEl.url = videoUrl;  
+    
     this._setHide(settings.hide)
     this._setVideoArea(settings.videoPosition || [0, 0, 1920, 1080])
 
