@@ -19,7 +19,7 @@ const PlayerState = {
 
 export default class MediaPlayer extends WPEMediaPlayer {
   static _supportedEvents() {
-    return ['onProgressUpdate', 'onEndOfStream', 'onPlayerStateChanged'];
+    return ['onProgressUpdate', 'onPlaybackStarted', 'onEndOfStream', 'onPlayerStateChanged'];
   }
 
   set textureMode(v) {
@@ -183,6 +183,11 @@ export default class MediaPlayer extends WPEMediaPlayer {
     });
   }
 
+  onPlaybackStarted(args) {                                                                                                 
+    this.playing();                                        
+    this.play();                                              
+  }   
+  
   onPlayerStateChanged(args) {
     let prevState = this.playerState;
     this.playerState = args.event.state;
@@ -226,4 +231,10 @@ export default class MediaPlayer extends WPEMediaPlayer {
       case PlayerState.RELEASED: break;
     }
   }
+  
+  _startUpdatingVideoTexture() {                                                                                            
+  }                                                                  
+                                                                   
+  _stopUpdatingVideoTexture() {                               
+  }   
 }
