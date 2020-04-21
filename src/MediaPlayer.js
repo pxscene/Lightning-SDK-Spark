@@ -192,8 +192,6 @@ export default class MediaPlayer extends WPEMediaPlayer {
   }
 
   onPlaybackStarted(args) {          
-    var elem = this.videoEl;    
-    this.videoEl.setVideoRectangle(elem.x,elem.y,elem.w,elem.h);
     this.play();                                              
   }   
   
@@ -221,7 +219,9 @@ export default class MediaPlayer extends WPEMediaPlayer {
       case PlayerState.PLAYING:
         if (prevState === PlayerState.SEEKING)            
           this.seeked();                                                                             
-        this.playing();                                                                                                     
+        this.playing();                                                                                                    
+        var elem = this.videoEl;    
+        this.videoEl.setVideoRectangle(elem.x,elem.y,elem.w,elem.h);
         if (prevState === PlayerState.PAUSED)
           this.play();
         break;
