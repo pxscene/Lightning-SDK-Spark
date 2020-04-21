@@ -191,8 +191,9 @@ export default class MediaPlayer extends WPEMediaPlayer {
     });
   }
 
-  onPlaybackStarted(args) {                                                                                                 
-    this.playing();                                        
+  onPlaybackStarted(args) {          
+    var elem = this.videoEl;    
+    this.videoEl.setVideoRectangle(elem.x,elem.y,elem.w,elem.h);
     this.play();                                              
   }   
   
@@ -218,13 +219,11 @@ export default class MediaPlayer extends WPEMediaPlayer {
         this.seeking();
         break;
       case PlayerState.PLAYING:
+        if (prevState === PlayerState.SEEKING)            
+          this.seeked();                                                                             
+        this.playing();                                                                                                     
         if (prevState === PlayerState.PAUSED)
           this.play();
-        else {
-          if (prevState === PlayerState.SEEKING)
-            this.seeked();
-          this.playing();
-        }
         break;
       case PlayerState.STOPPING: break;
       case PlayerState.STOPPED:
